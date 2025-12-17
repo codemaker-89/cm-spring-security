@@ -165,8 +165,6 @@ CREATE TABLE IF NOT EXISTS public.tenant_master
 	CONSTRAINT unq_tenant_phone UNIQUE (primary_contact_phone)
 );	
 
-ALTER TABLE IF EXISTS public.tenant_master
- OWNER to postgres;
 ------------------------------------------------------------------------------------------------------------------------- 
  USER
  ----
@@ -198,10 +196,6 @@ ALTER TABLE IF EXISTS public.tenant_master
     CONSTRAINT unq_mobile UNIQUE (mobile, tenant) 
 )
 
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS public.user_master
- OWNER to postgres;
  
 INSERT INTO public.user_master(
 	full_name, email, mobile, staff_id, role_id, username, password, tenant, entered_by)
@@ -225,10 +219,6 @@ CREATE TABLE IF NOT EXISTS public.role_master
     CONSTRAINT unq_role_master UNIQUE (role_name, tenant)
 )
 
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS public.role_master
-    OWNER to postgres;
     
 INSERT INTO public.role_master(
 	 role_name, description, active, tenant, entered_by)
@@ -256,10 +246,6 @@ CREATE TABLE IF NOT EXISTS public.jwt_token
     CONSTRAINT jwt_token_pkey PRIMARY KEY (id)
 )
 
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS public.jwt_token
- OWNER to postgres;
 
  ---------------------------------------------------------------------------------------------------------------------------
  TOKEN VALIDITY
@@ -272,10 +258,6 @@ ALTER TABLE IF EXISTS public.jwt_token
     CONSTRAINT token_validity_pkey PRIMARY KEY (id)
 )
 
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS public.token_validity
- OWNER to postgres;
  
   INSERT INTO public.token_validity(
 token_validity, tenant)
@@ -306,10 +288,6 @@ CREATE TABLE IF NOT EXISTS public.subscription_plans
     
 )
 
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS public.subscription_plans
- OWNER to postgres;
 
 --INSERT INTO public.subscription_plans 
 --(plan_name,code,description,max_employees,max_offices,price_monthly,price_yearly,active,tenant,features,entered_by,updated_by)
