@@ -83,16 +83,17 @@ For Maven project
 ```
 For Gradle Project 
 ```
-implementation("io.github.codemaker-89:cm-spring-security:1.1")
+implementation("io.github.codemaker-89:cm-spring-security:RELEASE")
 ````
 Step 2: Scan all components of library and your project.
+
 Use the following code in your main class. (Replace the default @SpringBootApplication annotation)
 ```
 @SpringBootApplication(scanBasePackages = {"<your.project.package>","com.cm.security"})
 ````
 
 ⚙️ Application Properties Configuration
-
+----------------------------------------
 The library is configurable via application.yml or application.properties in the consuming application.
 
 YAML Code
@@ -204,8 +205,8 @@ cm.security.allowed-path[0]=/oauth/**
 cm.security.allowed-path[1]=/actuator/**
 `````
 
-SETUP CORS CONFIGURATION
-
+🌐 SETUP CORS CONFIGURATION
+----------------------------
 The Cross-Origin Resource Sharing is configurable via application.yml or application.properties in the consuming application.
 
 YAML Code
@@ -275,18 +276,98 @@ cm.allowed-headers[5]=Access-Control-Request-Headers
 cm.exposed-headers[0]=Access-Control-Allow-Origin
 cm.exposed-headers[1]=Access-Control-Allow-Credentials
 `````
-SETUP DATABASE AND RUN THE FOLLOWING SCRIPTS
---------------------------------------------
+🗄️ SETUP DATABASE
+------------------------------------------------
+Set up a database using the following script in your preferred database system. The following script is for a PostgreSQL DB. 
+
+SUBSCRIPTION-STATUS
+`````
+CREATE TABLE IF NOT EXISTS public.subscription_status
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    status_name VARCHAR(50) COLLATE pg_catalog."default" NOT NULL,
+    status_code VARCHAR(50) COLLATE pg_catalog."default" NOT NULL,
+    description VARCHAR(100) COLLATE pg_catalog."default" NOT NULL,
+    active BOOLEAN DEFAULT true,
+    features JSONB DEFAULT '{}',
+    entered_by character varying(50) COLLATE pg_catalog."default",
+    entered_dt timestamp without time zone DEFAULT now(),
+    updated_by character varying(50) COLLATE pg_catalog."default",
+    updated_dt timestamp without time zone,
+    CONSTRAINT subscription_status_pkey PRIMARY KEY (id),
+    CONSTRAINT unq_sub_status UNIQUE (status_name),
+    CONSTRAINT unq_sub_code UNIQUE (status_code)
+    
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.subscription_status
+ OWNER to postgres;
+
+INSERT INTO public.subscription_status
+( status_name,status_code,description,active,  entered_by)
+VALUES('Trial','T','Trial Status', true, 'system');
+
+INSERT INTO public.subscription_status
+( status_name,status_code,description,active,  entered_by)
+VALUES('Active','A','Trial Status', true, 'system');
+
+INSERT INTO public.subscription_status
+( status_name,status_code,description,active,  entered_by)
+VALUES('Suspended','S','Trial Status', true, 'system');
+
+INSERT INTO public.subscription_status
+( status_name,status_code,description,active,  entered_by)
+VALUES('Cancelled','C','Trial Status', true, 'system');
+
+`````
+
+SUBSCRIPTION-PLAN
+`````
+CREATE TABLE IF NOT EXISTS public.subscription_plans
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    plan_name VARCHAR(50) COLLATE pg_catalog."default" NOT NULL,
+    code VARCHAR(50) COLLATE pg_catalog."default" NOT NULL,
+    description VARCHAR(100) COLLATE pg_catalog."default" NOT NULL,
+    max_employees INTEGER NOT NULL,
+    max_offices INTEGER NOT NULL,
+    price_monthly DECIMAL(10,2) NOT NULL,
+    price_yearly DECIMAL(10,2) NOT NULL,
+    active BOOLEAN DEFAULT true,
+    features JSONB DEFAULT '{}',
+    entered_by character varying(50) COLLATE pg_catalog."default",
+    entered_dt timestamp without time zone DEFAULT now(),
+    updated_by character varying(50) COLLATE pg_catalog."default",
+    updated_dt timestamp without time zone,
+    CONSTRAINT subscription_plans_pkey PRIMARY KEY (id),
+    CONSTRAINT unq_plan UNIQUE (plan_name),
+    CONSTRAINT unq_code UNIQUE (code)
+    
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.subscription_plans
+ OWNER to postgres; 
+
+INSERT INTO public.subscription_plans(plan_name,code,description,max_employees,max_offices,price_monthly,price_yearly,features,entered_by)
+VALUES('Basic Plan','BASIC','Entry-level plan for small teams',10,1,499.00,4999.00,'{}','system'),
+	  ('Standard Plan','STANDARD','Mid-tier plan for growing companies',50,5,1499.00,14999.00, '{}','system'),
+      ('Premium Plan','PREMIUM','Advanced plan with full features',200, 20,2999.00,29999.00,'{}','system');
+
+`````
+
 TENANT
 `````
--------
 CREATE TABLE IF NOT EXISTS public.tenant_master
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
     tenant_name character varying(50) COLLATE pg_catalog."default" NOT NULL,
     subdomain VARCHAR(100) UNIQUE NOT NULL,
-    subscription_status VARCHAR(20) NOT NULL DEFAULT 'trial' CHECK (subscription_status IN ('Trial', 'Active', 'Suspended', 'Cancelled')),
-    subscription_plan VARCHAR(50) NOT NULL DEFAULT 'starter' CHECK (subscription_plan IN ('Starter', 'Professional', 'Enterprise')),
+    subscription_status INTEGER NOT NULL REFERENCES public.subscription_status(id),
+    subscription_plan INTEGER NOT NULL REFERENCES public.subscription_plans(id),
     subscription_start_date DATE NOT NULL,
     subscription_end_date DATE,
     max_employees INTEGER NOT NULL DEFAULT 50,
@@ -309,17 +390,64 @@ CREATE TABLE IF NOT EXISTS public.tenant_master
 	CONSTRAINT unq_tenant_phone UNIQUE (primary_contact_phone)
 );	
 
-------------------------------------------------------------------------------------------------------------------------- 
- USER
- ----
- CREATE TABLE IF NOT EXISTS public.user_master
+ALTER TABLE IF EXISTS public.tenant_master
+ OWNER to postgres;
+ 
+ INSERT INTO public.tenant_master
+( tenant_name,subdomain,subscription_status, subscription_plan, subscription_start_date, subscription_end_date, max_employees, max_offices, timezone,
+    currency,logo_url, primary_contact_email,primary_contact_phone,active, settings, entered_by
+)
+VALUES
+(
+    'Tenant Name', 'domain-name',1, 1, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year',100,10,'Asia/Kolkata','INR','https://example.com/logo.png',
+    'admin@acme.com', '+91-9876543210', true,'{}','system'
+);
+
+`````	
+
+ROLE-MASTER
+`````	
+CREATE TABLE IF NOT EXISTS public.role_master
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    role_name character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    description character varying(100) COLLATE pg_catalog."default",
+    active boolean DEFAULT true,
+    tenant INTEGER NOT NULL REFERENCES public.tenant_master(id),
+    entered_by character varying(50) COLLATE pg_catalog."default",
+    entered_dt timestamp without time zone DEFAULT now(),
+    updated_by character varying(50) COLLATE pg_catalog."default",
+    updated_dt timestamp without time zone,
+    CONSTRAINT role_master_pkey PRIMARY KEY (id),
+    CONSTRAINT unq_role_master UNIQUE (role_name, tenant)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.role_master
+    OWNER to postgres;
+    
+INSERT INTO public.role_master(
+	 role_name, description, active, tenant, entered_by)
+	VALUES ( 'Platform Admin', 'Platform Administrator Role', true, 1, 'system');    
+	
+    
+INSERT INTO public.role_master(
+	 role_name, description, active, tenant, entered_by)
+	VALUES ( 'Tenant Admin', 'Tenant Administrator Role', true, 1, 'system');  	
+
+`````
+
+USER-MASTER
+`````
+CREATE TABLE IF NOT EXISTS public.user_master
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
     full_name character varying(100) COLLATE pg_catalog."default" NOT NULL,
     email character varying(100) COLLATE pg_catalog."default",
     mobile character varying(12) COLLATE pg_catalog."default",
     staff_id character varying(15) COLLATE pg_catalog."default" NOT NULL,
-    role_id integer NOT NULL,
+    role_id INTEGER NOT NULL REFERENCES public.role_master(id),
     username character varying(50) COLLATE pg_catalog."default" NOT NULL,
     password character varying(100) COLLATE pg_catalog."default" NOT NULL,
     two_stage_enabled boolean DEFAULT false,
@@ -328,7 +456,7 @@ CREATE TABLE IF NOT EXISTS public.tenant_master
     account_non_locked boolean DEFAULT true,
     credentials_non_expired boolean DEFAULT true,
     active boolean DEFAULT true,
-    tenant integer NOT NULL,
+    tenant INTEGER NOT NULL REFERENCES public.tenant_master(id),
     entered_by character varying(50) COLLATE pg_catalog."default",
     entered_dt timestamp without time zone DEFAULT now(),
     updated_by character varying(50) COLLATE pg_catalog."default",
@@ -340,49 +468,27 @@ CREATE TABLE IF NOT EXISTS public.tenant_master
     CONSTRAINT unq_mobile UNIQUE (mobile, tenant) 
 )
 
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.user_master
+ OWNER to postgres;
  
-INSERT INTO public.user_master(
+ 
+ INSERT INTO public.user_master(
 	full_name, email, mobile, staff_id, role_id, username, password, tenant, entered_by)
-	VALUES ('Administrator', 'admin@gmail.com', '9876543210', 'EMP-0001',1, 'admin', '$2a$10$euD7x8Iid6V2LpGKit6Ys.jiQ4LtTrpeYQejx9GQvjEGQYThcPLK.',1,'system'); 
-------------------------------------------------------------------------------------------------------------------------- ------------------------------------
+	VALUES ('Administrator', 'jayasankar.47@gmail.com', '9567675677', 'EMP-0001',1, 'admin', '$2a$10$euD7x8Iid6V2LpGKit6Ys.jiQ4LtTrpeYQejx9GQvjEGQYThcPLK.',1,'system'); 	
 
-ROLE
------
-CREATE TABLE IF NOT EXISTS public.role_master
-(
-    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    role_name character varying(50) COLLATE pg_catalog."default" NOT NULL,
-    description character varying(100) COLLATE pg_catalog."default",
-    active boolean DEFAULT true,
-    tenant integer NOT NULL,
-    entered_by character varying(50) COLLATE pg_catalog."default",
-    entered_dt timestamp without time zone DEFAULT now(),
-    updated_by character varying(50) COLLATE pg_catalog."default",
-    updated_dt timestamp without time zone,
-    CONSTRAINT role_master_pkey PRIMARY KEY (id),
-    CONSTRAINT unq_role_master UNIQUE (role_name, tenant)
-)
-
-    
-INSERT INTO public.role_master(
-	 role_name, description, active, tenant, entered_by)
-	VALUES ( 'Platform Admin', 'Platform Administrator Role', true, 1, 'system');    
+`````
 	
-    
-INSERT INTO public.role_master(
-	 role_name, description, active, tenant, entered_by)
-	VALUES ( 'Tenant Admin', 'Tenant Administrator Role', true, 1, 'system'); 
-	
-------------------------------------------------------------------------------------------------------------------------------
-JWT TOKEN	
----------
+JWT-TOKEN
+`````
 CREATE TABLE IF NOT EXISTS public.jwt_token
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
     access_token character varying(5000) COLLATE pg_catalog."default",
     refresh_token character varying(5000) COLLATE pg_catalog."default",
     username character varying(50) COLLATE pg_catalog."default",
-    tenant integer,
+    tenant INTEGER NOT NULL REFERENCES public.tenant_master(id),
     issued_at timestamp without time zone,
     expires_at timestamp without time zone,
     refresh_expires_at timestamp without time zone,
@@ -391,58 +497,26 @@ CREATE TABLE IF NOT EXISTS public.jwt_token
 )
 
 
- ---------------------------------------------------------------------------------------------------------------------------
- TOKEN VALIDITY
----------------
- CREATE TABLE IF NOT EXISTS public.token_validity
-(
-    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    token_validity integer,
-    tenant integer,
-    CONSTRAINT token_validity_pkey PRIMARY KEY (id)
-)
+`````
 
- 
-  INSERT INTO public.token_validity(
-token_validity, tenant)
-	VALUES ( 3600, 1);
----------------------------------------------------------------------------------------------------------------------------------	
-SUBSCRIPTION PLAN
------------------
-CREATE TABLE IF NOT EXISTS public.subscription_plans
+CREDENTIALS
+`````
+CREATE TABLE IF NOT EXISTS public.credentials
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    plan_name VARCHAR(50) COLLATE pg_catalog."default" NOT NULL,
-    code VARCHAR(50) COLLATE pg_catalog."default" NOT NULL,
-    description VARCHAR(100) COLLATE pg_catalog."default" NOT NULL,
-    max_employees INTEGER NOT NULL,
-    max_offices INTEGER NOT NULL,
-    price_monthly DECIMAL(10,2) NOT NULL,
-    price_yearly DECIMAL(10,2) NOT NULL,
-    active BOOLEAN DEFAULT true,
-    tenant integer,
-    features JSONB DEFAULT '{}',
+    cred_name character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    cred_value character varying(100) COLLATE pg_catalog."default",
+    active boolean DEFAULT true,
     entered_by character varying(50) COLLATE pg_catalog."default",
     entered_dt timestamp without time zone DEFAULT now(),
     updated_by character varying(50) COLLATE pg_catalog."default",
     updated_dt timestamp without time zone,
-    CONSTRAINT subscription_plans_pkey PRIMARY KEY (id),
-    CONSTRAINT unq_plan UNIQUE (plan_name),
-    CONSTRAINT unq_code UNIQUE (code)
-    
-)
+    CONSTRAINT credentials_pkey PRIMARY KEY (id),
+    CONSTRAINT unq_cred UNIQUE (cred_name)
 
+);
 
---INSERT INTO public.subscription_plans 
---(plan_name,code,description,max_employees,max_offices,price_monthly,price_yearly,active,tenant,features,entered_by,updated_by)
---VALUES ('Starter', 'PL-STR', 'Suitable for small teams',10, 1, 1000,10000, true,1,'system'); 
+INSERT INTO public.credentials(cred_name, cred_value,  entered_by)
+	VALUES ('aes-key', '6674fe3c340b10c3af52410670a1973e','system');	
 
---INSERT INTO public.subscription_plans 
---(plan_name,code,description,max_employees,max_offices,price_monthly,price_yearly,active,tenant,features,entered_by,updated_by)
---VALUES ('Professional', 'PL-PRO', 'Suitable Medium teams',100, 20, 2000,20000, true,1,'system'); 
-
---INSERT INTO public.subscription_plans 
---(plan_name,code,description,max_employees,max_offices,price_monthly,price_yearly,active,tenant,features,entered_by,updated_by)
---VALUES ('Enterprise', 'PL-MAX', 'Suitable Large Organization',1000, 50, 3000,30000, true,1,'system'); 
-
-    
+`````
