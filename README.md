@@ -15,26 +15,29 @@ This project is designed to be added as a dependency to other Spring Boot applic
 ---------------------
 The project is built using the following core dependencies:
 
-SPRING SECURITY & OAUTH
-........................
-spring-boot-starter-security – Core Spring Security framework
-spring-boot-starter-oauth2-client – OAuth2 login and client support
+1. SPRING SECURITY & OAUTH
+ 
+	a. spring-boot-starter-security – Core Spring Security framework
 
-JWT (JSON Web Tokens)
-jjwt-api, jjwt-impl, jjwt-jackson – JWT creation, parsing, and signing
-jjwt (0.12.5) – Latest JWT utilities
+	b. spring-boot-starter-oauth2-client – OAuth2 login and client support
+
+2. JWT (JSON Web Tokens)
+   
+    a. jjwt-api, jjwt-impl, jjwt-jackson – JWT creation, parsing, and signing
+
+    b. jjwt (0.12.5) – Latest JWT utilities
 
 🧩 Project Modules Overview
-
+---------------------------
 1️⃣ Authentication Module
 
-Responsible for:
+1. Responsible for:
 
 User authentication
 JWT token generation
 Refresh token handling
 
-APIs Provided:
+2. APIs Provided:
 ````
 POST /oauth/login
 GET /oauth/logout
@@ -43,14 +46,14 @@ This allows consuming applications to reuse authentication logic without reimple
 ````
 2️⃣ JWT Module
 
-Handles:
+1. Handles:
 
 JWT creation and signing
 Token validation
 Claim extraction
 Token expiration checks
 
-Key Components:
+2. Key Components:
 
 IJWTService
 JwtTokenUtil
