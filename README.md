@@ -31,47 +31,47 @@ The project is built using the following core dependencies:
 ---------------------------
 1️⃣ Authentication Module
 
-1. Responsible for:
-
-User authentication
-JWT token generation
-Refresh token handling
-
-2. APIs Provided:
-````
-POST /oauth/login
-GET /oauth/logout
-PUT /oauth/refresh
-This allows consuming applications to reuse authentication logic without reimplementing it.
-````
+  1. Responsible for:
+`````
+	User authentication
+	JWT token generation
+	Refresh token handling
+`````
+  2. APIs Provided:
+`````
+	POST /oauth/login
+	GET /oauth/logout
+	PUT /oauth/refresh
+	This allows consuming applications to reuse authentication logic without re-implementing it.
+`````
 2️⃣ JWT Module
 
-1. Handles:
-
-JWT creation and signing
-Token validation
-Claim extraction
-Token expiration checks
-
-2. Key Components:
-
-IJWTService
-JwtTokenUtil
-
-Secret key & expiration configuration
+  1. Handles:
+`````
+   a.JWT creation and signing
+   b.Token validation
+   c.Claim extraction 
+   d.Token expiration checks
+`````
+  2. Key Components:
+`````
+   a. IJWTService  
+   b. JwtTokenUtil
+`````
+  3. Secret key & expiration configuration
 
 3️⃣ OAuth2 Module
 
-Provides:
-
-OAuth2 client configuration
-Token exchange handling
-Integration with Spring Security OAuth2 flow
-
+  1. Provides:
+`````
+   a. OAuth2 client configuration
+   b. Token exchange handling
+   c. Integration with Spring Security OAuth2 flow
+`````
 This allows applications to enable OAuth login without writing boilerplate code.
 
 🔌 How to Use as a Library
-
+---------------------------
 Step 1: Add Dependency 
 
 For Maven project
@@ -86,6 +86,12 @@ For Gradle Project
 ```
 implementation("io.github.codemaker-89:cm-spring-security:1.1")
 ````
+Step 2: Scan all components of library and your project.
+Use the following code in your main class. (Replace the default @SpringBootApplication annotation)
+```
+@SpringBootApplication(scanBasePackages = {"<your.project.package>","com.cm.security"})
+````
+
 ⚙️ Application Properties Configuration
 
 The library is configurable via application.yml or application.properties in the consuming application.
