@@ -1,10 +1,10 @@
 CM SPRING SECURITY
-
+------------------
 A reusable Spring Boot security library that provides a ready-made implementation of JWT-based authentication, OAuth2 client integration, and common security APIs (login, logout, refresh token) so that consuming projects can skip writing repetitive security code.
 This project is designed to be added as a dependency to other Spring Boot applications and plugged into their security configuration with minimal setup.
 
 ✨ Key Features
-
+----------------
    JWT token generation, validation, and refresh
    Standard authentication APIs (Login, Logout, Refresh Token)
    Custom JwtAuthenticationFilter
@@ -12,10 +12,11 @@ This project is designed to be added as a dependency to other Spring Boot applic
    Easy-to-use as a library dependency
 
 📦 Dependencies Used
-
+---------------------
 The project is built using the following core dependencies:
 
 SPRING SECURITY & OAUTH
+........................
 spring-boot-starter-security – Core Spring Security framework
 spring-boot-starter-oauth2-client – OAuth2 login and client support
 
@@ -86,23 +87,33 @@ implementation("io.github.codemaker-89:cm-spring-security:1.1")
 
 The library is configurable via application.yml or application.properties in the consuming application.
 
-
+YAML Code
  ````
-
+# ===============================
+# Server Configuration
+# ===============================
 server:
   port: <your-port-no>
   servlet:
     context-path: /<your_app_context_path_name>
+
+# ===============================
+# Spring Application Name
+# ===============================
 spring:
   application:
     name: <your_application_name>
-
+# ===============================
+# Datasource Configuration
+# ===============================
   datasource:
     driver-class-name: <database-driver-class-name>
     url: <database-url>
     username: <database-username>
     password: <database-password>
-
+# ===============================
+# JPA / Hibernate Configuration
+# ===============================
   jpa:
     hibernate:
       naming:
@@ -111,15 +122,23 @@ spring:
     properties:
       hibernate:
         dialect: <database-dialect>
-
+# ===============================
+# Spring Configuration
+# ===============================
   main:
     allow-bean-definition-overriding: true
-    allow-circular-references: true								
+    allow-circular-references: true
+# ===============================
+# Web / Error Configuration 
+# ===============================						
   web:
     error:
       whitelabel:
         enabled: false
 
+# ================================
+# Custom CM Security Configuration
+# ================================
 #provide custom header for Context-Token and path that dont need token 
 cm:
   security:
@@ -128,13 +147,130 @@ cm:
     allowed-path:
     - /oauth/**
     - /actuator/**
+````
+Properties Code
+`````
+# ===============================
+# Server Configuration
+# ===============================
+server.port=<your-port-no>
+server.servlet.context-path=/<your_app_context_path_name>
 
+# ===============================
+# Spring Application Name
+# ===============================
+spring.application.name=<your_application_name>
+
+# ===============================
+# Datasource Configuration
+# ===============================
+spring.datasource.driver-class-name=<database-driver-class-name>
+spring.datasource.url=<database-url>
+spring.datasource.username=<database-username>
+spring.datasource.password=<database-password>
+
+# ===============================
+# JPA / Hibernate Configuration
+# ===============================
+spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=<database-dialect>
+
+# ===============================
+# Spring Configuration
+# ===============================
+spring.main.allow-bean-definition-overriding=true
+spring.main.allow-circular-references=true
+
+# ===============================
+# Web / Error Configuration
+# ===============================
+spring.web.error.whitelabel.enabled=false
+
+# ===============================
+# Custom CM Security Configuration
+# ===============================
+cm.security.custom-header=<your-custom-request-header>
+cm.security.token-validity=3600
+cm.security.allowed-path[0]=/oauth/**
+cm.security.allowed-path[1]=/actuator/**
+`````
+
+SETUP CORS CONFIGURATION
+
+The Cross-Origin Resource Sharing is configurable via application.yml or application.properties in the consuming application.
+
+YAML Code
+````
+cm:
+    allowed-path:
+    - /oauth/**
+    - /actuator/**
+    - /test/**
+    enable-cors: true
+    allow-credentials: false
+    allowed-origins:
+    - '*' # Allow from every origin
+#   - http://localhost:3000
+#   - http://localhost:3001
+    allowed-methods:
+    - POST
+    - GET
+    - PUT
+    - DELETE
+    - PATCH
+    - OPTIONS
+    allowed-headers:
+    - Authorization
+    - Accept
+    - X-Context-Token
+    - Content-Type
+    - Access-Control-Request-Method
+    - Access-Control-Request-Headers
+    exposed-headers:
+    - Access-Control-Allow-Origin
+    - Access-Control-Allow-Credentials
 
 ````
+Properties Code
+`````
+# ===============================
+# CM Security / CORS Configuration
+# ===============================
 
+cm.allowed-path[0]=/oauth/**
+cm.allowed-path[1]=/actuator/**
+cm.allowed-path[2]=/test/**
+
+cm.enable-cors=true
+cm.allow-credentials=false
+
+cm.allowed-origins[0]=*
+
+# cm.allowed-origins[1]=http://localhost:3000
+# cm.allowed-origins[2]=http://localhost:3001
+
+cm.allowed-methods[0]=POST
+cm.allowed-methods[1]=GET
+cm.allowed-methods[2]=PUT
+cm.allowed-methods[3]=DELETE
+cm.allowed-methods[4]=PATCH
+cm.allowed-methods[5]=OPTIONS
+
+cm.allowed-headers[0]=Authorization
+cm.allowed-headers[1]=Accept
+cm.allowed-headers[2]=X-Context-Token
+cm.allowed-headers[3]=Content-Type
+cm.allowed-headers[4]=Access-Control-Request-Method
+cm.allowed-headers[5]=Access-Control-Request-Headers
+
+cm.exposed-headers[0]=Access-Control-Allow-Origin
+cm.exposed-headers[1]=Access-Control-Allow-Credentials
+`````
 SETUP DATABASE AND RUN THE FOLLOWING SCRIPTS
-````````````````````````````````````````````
+--------------------------------------------
 TENANT
+`````
 -------
 CREATE TABLE IF NOT EXISTS public.tenant_master
 (
